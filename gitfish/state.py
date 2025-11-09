@@ -18,7 +18,8 @@ DEFAULT = {
         "rod_level": 1,
         "luck_bonus": 0.0
     },
-    "last_sync": None
+    "last_sync": None,
+    "last_processed_event_id": None
 }
 
 def load_state():
