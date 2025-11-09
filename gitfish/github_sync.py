@@ -54,14 +54,23 @@ def sync_from_github(reset=False):
     """
     state = load_state()
     
-    # Get list of already processed event IDs
-    processed_ids = set() if reset else set(state.get("processed_event_ids", []))
+    # Get list of already processed event IDs, ensuring they're strings
+    if reset:
+        processed_ids = set()
+    else:
+        processed_ids = set(str(pid) for pid in state.get("processed_event_ids", []))
     
     # Fetch recent events from GitHub
     all_events = fetch_recent_events()
     
     # Filter to only new events (not already processed)
-    new_events = [e for e in all_events if e.get("id") not in processed_ids]
+    # Convert event IDs to strings for consistent comparison
+    new_events = []
+    for event in all_events:
+        event_id = str(event.get("id")) if event.get("id") else None
+        if event_id and event_id not in processed_ids:
+            new_events.append(event)
+            processed_ids.add(event_id)
     
     # Score the new events
     xp, coins = score_events(new_events)
@@ -70,12 +79,7 @@ def sync_from_github(reset=False):
     state["user"]["xp"] += xp
     state["user"]["coins"] += coins
     
-    # Track all processed event IDs (both old and new)
-    for event in new_events:
-        event_id = event.get("id")
-        if event_id:
-            processed_ids.add(event_id)
-    
+    # Save processed event IDs as strings
     state["processed_event_ids"] = list(processed_ids)
     save_state(state)
     
@@ -84,5 +88,10 @@ def sync_from_github(reset=False):
         "coins": coins,
         "events": len(new_events),
         "total_xp": state["user"]["xp"],
-        "total_coins": state["user"]["coins"]
+        "total_coins": state["user"]["coins"],
+        "debug": {
+            "total_events_fetched": len(all_events),
+            "new_events_found": len(new_events),
+            "total_processed_ids": len(processed_ids)
+        }
     }
