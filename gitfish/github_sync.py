@@ -59,3 +59,5 @@ def sync_from_github():
     state["last_sync"] = datetime.now(timezone.utc).isoformat()
     save_state(state)
     return {"xp": xp, "coins": coins, "events": len(events)}
+
+# test
