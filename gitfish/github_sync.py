@@ -79,6 +79,5 @@ def sync_from_github(reset=False):
         state["last_processed_event_id"] = most_recent_event.get("id")
 
     save_state(state)
-    return {"xp": xp, "coins": coins, "events": len(events), "total_xp": state["user"]["xp"], "total_coins": state["user"]["coins"]}
-
-# test 2 1 1 1 1 1
+    return {"total_xp": state["user"]["xp"], "total_coins": state["user"]["coins"]}
+    # a
