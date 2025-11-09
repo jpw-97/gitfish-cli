@@ -49,15 +49,22 @@ def score_events(events):
     return xp, coins
 
 
-def sync_from_github():
+def sync_from_github(reset=False):
+    """
+    Sync GitHub activity and update XP/coins.
+    
+    Args:
+        reset: If True, ignore last_sync and process all recent events (useful if you made commits before last sync)
+    """
     state = load_state()
-    last_sync = state.get("last_sync")
+    last_sync = None if reset else state.get("last_sync")
     events = fetch_events(since_iso=last_sync)
     xp, coins = score_events(events)
-    state["user"]["xp"] = xp
-    state["user"]["coins"] = coins
+    # Accumulate XP and coins instead of overwriting
+    state["user"]["xp"] += xp
+    state["user"]["coins"] += coins
     state["last_sync"] = datetime.now(timezone.utc).isoformat()
     save_state(state)
-    return {"xp": xp, "coins": coins, "events": len(events)}
+    return {"xp": xp, "coins": coins, "events": len(events), "total_xp": state["user"]["xp"], "total_coins": state["user"]["coins"]}
 
-# test
+# test 2
