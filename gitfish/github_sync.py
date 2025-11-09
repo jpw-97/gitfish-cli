@@ -52,38 +52,33 @@ def score_events(events):
 def sync_from_github(reset=False):
     """
     Sync GitHub activity and update XP/coins.
-    
+
     Args:
         reset: If True, ignore last_sync and process all recent events (useful if you made commits before last sync)
     """
     state = load_state()
     last_processed_event_time = None if reset else state.get("last_sync")
-    last_processed_event_id = None if reset else state.get("last_processed_event_id")
-    
+    last_processed_event_id = None if reset else state.get(
+        "last_processed_event_id")
+
     events = fetch_events(since_iso=last_processed_event_time)
-    
-    # Filter out events we've already processed (by ID) to avoid duplicates
+
     if last_processed_event_id:
         events = [e for e in events if e.get("id") != last_processed_event_id]
-    
+
     xp, coins = score_events(events)
-    
-    # Accumulate XP and coins instead of overwriting
+
     state["user"]["xp"] += xp
     state["user"]["coins"] += coins
-    
-    # Update last_sync to be the timestamp of the most recent event processed
-    # and track the last processed event ID to avoid duplicates
+
     if events:
-        # Events are returned in reverse chronological order (newest first)
-        # So the first event is the most recent one
         most_recent_event = events[0]
-        most_recent_event_time = most_recent_event["created_at"].replace("Z", "+00:00")
+        most_recent_event_time = most_recent_event["created_at"].replace(
+            "Z", "+00:00")
         state["last_sync"] = most_recent_event_time
         state["last_processed_event_id"] = most_recent_event.get("id")
-    # If no events, keep the existing last_sync (or None if reset)
-    
+
     save_state(state)
     return {"xp": xp, "coins": coins, "events": len(events), "total_xp": state["user"]["xp"], "total_coins": state["user"]["coins"]}
 
-# test 2
+# test 2 1 1 1 1 1
