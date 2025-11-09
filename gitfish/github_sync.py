@@ -1,6 +1,5 @@
 import os
 import requests
-from datetime import datetime, timezone
 from dotenv import load_dotenv
 from gitfish.state import load_state, save_state
 
@@ -24,25 +23,20 @@ SCORES = {
 }
 
 
-def fetch_events(since_iso=None, per_page=100):
+def fetch_recent_events(since_iso=None, per_page=100):
     params = {"per_page": per_page}
     resp = requests.get(EVENTS_URL, headers=HEADERS, params=params, timeout=10)
     resp.raise_for_status()
-    events = resp.json()
-
-    if since_iso:
-        since_dt = datetime.fromisoformat(since_iso)
-        events = [e for e in events if datetime.fromisoformat(
-            e["created_at"].replace("Z", "+00:00")) > since_dt]
-    return events
+    return resp.json()
 
 
 def score_events(events):
+    """Calculate XP and coins from events."""
     xp = 0
     coins = 0
-    for e in events:
-        t = e.get("type")
-        score = SCORES.get(t)
+    for event in events:
+        event_type = event.get("type")
+        score = SCORES.get(event_type)
         if score:
             xp += score["xp"]
             coins += score["coins"]
@@ -52,31 +46,43 @@ def score_events(events):
 def sync_from_github(reset=False):
     """
     Sync GitHub activity and update XP/coins.
-
+    
+    Only processes events that haven't been seen before, tracked by event ID.
+    
     Args:
-        reset: If True, ignore last_sync and process all recent events (useful if you made commits before last sync)
+        reset: If True, clear processed events list and process all recent events
     """
     state = load_state()
-    last_processed_event_time = None if reset else state.get("last_sync")
-    last_processed_event_id = None if reset else state.get(
-        "last_processed_event_id")
-
-    events = fetch_events(since_iso=last_processed_event_time)
-
-    if last_processed_event_id:
-        events = [e for e in events if e.get("id") != last_processed_event_id]
-
-    xp, coins = score_events(events)
-
+    
+    # Get list of already processed event IDs
+    processed_ids = set() if reset else set(state.get("processed_event_ids", []))
+    
+    # Fetch recent events from GitHub
+    all_events = fetch_recent_events()
+    
+    # Filter to only new events (not already processed)
+    new_events = [e for e in all_events if e.get("id") not in processed_ids]
+    
+    # Score the new events
+    xp, coins = score_events(new_events)
+    
+    # Update state
     state["user"]["xp"] += xp
     state["user"]["coins"] += coins
-
-    if events:
-        most_recent_event = events[0]
-        most_recent_event_time = most_recent_event["created_at"].replace(
-            "Z", "+00:00")
-        state["last_sync"] = most_recent_event_time
-        state["last_processed_event_id"] = most_recent_event.get("id")
-
+    
+    # Track all processed event IDs (both old and new)
+    for event in new_events:
+        event_id = event.get("id")
+        if event_id:
+            processed_ids.add(event_id)
+    
+    state["processed_event_ids"] = list(processed_ids)
     save_state(state)
-    return {"total_xp": state["user"]["xp"], "total_coins": state["user"]["coins"]}
+    
+    return {
+        "xp": xp,
+        "coins": coins,
+        "events": len(new_events),
+        "total_xp": state["user"]["xp"],
+        "total_coins": state["user"]["coins"]
+    }
