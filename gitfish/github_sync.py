@@ -23,7 +23,7 @@ SCORES = {
 }
 
 
-def fetch_recent_events(since_iso=None, per_page=100):
+def fetch_recent_events(per_page=100):
     params = {"per_page": per_page}
     resp = requests.get(EVENTS_URL, headers=HEADERS, params=params, timeout=10)
     resp.raise_for_status()
