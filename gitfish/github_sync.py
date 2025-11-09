@@ -80,4 +80,3 @@ def sync_from_github(reset=False):
 
     save_state(state)
     return {"total_xp": state["user"]["xp"], "total_coins": state["user"]["coins"]}
-    # a
