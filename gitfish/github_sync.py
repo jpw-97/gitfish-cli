@@ -3,7 +3,7 @@ import requests
 from dotenv import load_dotenv
 from gitfish.state import load_state, save_state
 
-# Load environment variables from .env file if it exists
+# load from .env file if it exists
 load_dotenv()
 
 GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
@@ -54,17 +54,17 @@ def sync_from_github(reset=False):
     """
     state = load_state()
     
-    # Get list of already processed event IDs, ensuring they're strings
+    # get list of already processed event IDs, ensuring they're strings
     if reset:
         processed_ids = set()
     else:
         processed_ids = set(str(pid) for pid in state.get("processed_event_ids", []))
     
-    # Fetch recent events from GitHub
-    all_events = fetch_recent_events()
+    # Fetch recent events from GitHub (fetch more to catch recent activity)
+    all_events = fetch_recent_events(per_page=100)
     
-    # Filter to only new events (not already processed)
-    # Convert event IDs to strings for consistent comparison
+    # filter to only new events (not already processed)
+    # convert event IDs to strings for consistent comparison
     new_events = []
     for event in all_events:
         event_id = str(event.get("id")) if event.get("id") else None
@@ -72,16 +72,21 @@ def sync_from_github(reset=False):
             new_events.append(event)
             processed_ids.add(event_id)
     
-    # Score the new events
+    # score the new events
     xp, coins = score_events(new_events)
     
     # Update state
     state["user"]["xp"] += xp
     state["user"]["coins"] += coins
     
-    # Save processed event IDs as strings
+    # save processed event IDs as strings
     state["processed_event_ids"] = list(processed_ids)
     save_state(state)
+    
+    # get most recent event timestamp for debugging
+    most_recent_event_time = None
+    if all_events:
+        most_recent_event_time = all_events[0].get("created_at")
     
     return {
         "xp": xp,
@@ -92,6 +97,7 @@ def sync_from_github(reset=False):
         "debug": {
             "total_events_fetched": len(all_events),
             "new_events_found": len(new_events),
-            "total_processed_ids": len(processed_ids)
+            "total_processed_ids": len(processed_ids),
+            "most_recent_event_time": most_recent_event_time
         }
     }

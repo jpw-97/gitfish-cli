@@ -15,7 +15,8 @@ DEFAULT = {
     },
     "gear": {
         "rod_level": 1,
-        "luck_bonus": 0.0
+        "luck_bonus": 0.0,
+        "bait" : 0
     },
     "processed_event_ids": []
 }

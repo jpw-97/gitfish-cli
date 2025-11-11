@@ -1,6 +1,8 @@
 import typer
+import asyncio
 from rich.console import Console
 from rich.panel import Panel
+from gitfish.game import cast_loop
 
 app = typer.Typer()
 console = Console()
@@ -12,8 +14,10 @@ def start():
 
 @app.command()
 def cast():
-    """cast out your line"""
-    console.print(Panel("you cast out your line", style="red"))
+    try:
+        asyncio.run(cast_loop())
+    except KeyboardInterrupt:
+        console.print("You reel your line in.")
 
 @app.command()
 def sync():
