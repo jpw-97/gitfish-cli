@@ -9,7 +9,7 @@ from gitfish.github_sync import sync_from_github
 console = Console()
 
 
-async def cast_loop(tick_interval=2):
+async def cast_loop(tick_interval=5):
     """
     Commences idle fishing loop for the specific tick duration.
     """
