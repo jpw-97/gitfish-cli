@@ -18,6 +18,13 @@ DEFAULT = {
         "luck_bonus": 0.0,
         "bait" : 0
     },
+    "inventory": {
+        "bait": {
+            "maggots": 0,
+            "minnows": 0
+        },
+    },
+    "equipped_bait": "maggots",
     "processed_event_ids": []
 }
 

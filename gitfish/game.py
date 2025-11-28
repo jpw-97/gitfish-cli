@@ -69,11 +69,3 @@ async def cast_loop(tick_interval=5):
     except KeyboardInterrupt:
         console.print("You reel your line in.")
 
-###############################################################
-# todo not considering 'bait' at the moment, just testing cast loop
-    # coins = state["user"]["coins"]
-
-    # if coins < 1:
-    #     console.print("")
-
-# def buy_bait():
