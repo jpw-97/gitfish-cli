@@ -3,7 +3,7 @@ name = "gitfish"
 version = "0.1.0"
 description = "An idle fishing game to encourage better dev habits"
 authors = [{name = "jpw-97"}]
-dependencies = ["typer", "rich", "requests", "python-dotenv", "asyncio"]
+dependencies = ["typer", "rich", "requests", "python-dotenv", "asyncio", "asciimatics"]
 
 [project.scripts]
 gitfish = "gitfish.main:app"

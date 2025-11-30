@@ -25,6 +25,7 @@ DEFAULT = {
         },
     },
     "equipped_bait": "maggots",
+    "equipped_rod": "basic",
     "processed_event_ids": []
 }
 

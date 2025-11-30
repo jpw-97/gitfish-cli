@@ -1,20 +1,24 @@
 import typer
 import asyncio
+from asciimatics.screen import Screen
+from gitfish.graphics.title_screen import title_screen
 from gitfish.state import load_state, save_state
 from gitfish.github_sync import sync_from_github
 from gitfish.game import cast_loop
 from gitfish.shop import show_shop, buy_item
-from gitfish.equip import equip_bait
+from gitfish.equip import equip_bait, equip_show
 from rich.console import Console
 from rich.panel import Panel
+
 
 app = typer.Typer()
 console = Console()
 
-
 @app.command()
 def start():
     """Start a Gitfish Session"""
+    Screen.wrapper(title_screen)
+
     state = load_state()
     console.print(
         Panel("Fishing awaits!", title="Gitfish", style="bold green"))
@@ -43,16 +47,20 @@ def start():
         elif cmd.startswith("equip"):
             parts = cmd.split()
             if len(parts) < 2:
-                console.print("Usage: equip <bait_type>")
+                console.print("Usage: equip <bait_type>, equip show")
                 continue
             bait_type = parts[1]
-            equip_bait(bait_type)
-            state = load_state()
-            continue
+            if bait_type != "show":
+                equip_bait(bait_type)
+                state = load_state()
+                continue
+            else:
+                equip_show()
+                continue
         elif cmd.startswith("shop"):
             parts = cmd.split()
             if len(parts) < 2:
-                console.print("Usage: shop view / shop <item> <quantity>.")
+                console.print("Usage: shop view / shop buy <item> <quantity>.")
                 continue
             if parts[1] == "view":
                 show_shop()
@@ -61,36 +69,6 @@ def start():
             continue
         else:
             console.print("Unknown command. Try cast, sync, stats, quit.")
-
-@app.command()
-def cast():
-    try:
-        asyncio.run(cast_loop())
-    except KeyboardInterrupt:
-        console.print("You reel your line in.")
-
-@app.command()
-def sync():
-    """sync your github activity"""
-    console.print(Panel("syncing github activity", style="blue"))
-
-@app.command()
-def shop(action: str = typer.Argument("view"), item: str = None, quantity: int = 1):
-    """
-    The Gitfish shop. Usage:
-        gitfish shop
-        gitfish shop buy maggots 5
-        gitfish view
-    """
-    if action == "view":
-        show_shop()
-    elif action == "buy":
-        if not item:
-            console.print("Specify a valid item to purchase.")
-            return
-        buy_item(item, quantity)
-    else:
-        console.print("Unknown shop action.")
 
 if __name__ == "__main__":
     app()
