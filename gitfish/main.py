@@ -3,6 +3,8 @@ import asyncio
 from gitfish.state import load_state, save_state
 from gitfish.github_sync import sync_from_github
 from gitfish.game import cast_loop
+from gitfish.shop import show_shop, buy_item
+from gitfish.equip import equip_bait
 from rich.console import Console
 from rich.panel import Panel
 
@@ -38,9 +40,27 @@ def start():
         elif cmd == "stats":
             s = load_state()
             console.print(f"XP: {s['user']['xp']} | Coins: {s['user']['coins']} | Gear: {s['gear']}")
+        elif cmd.startswith("equip"):
+            parts = cmd.split()
+            if len(parts) < 2:
+                console.print("Usage: equip <bait_type>")
+                continue
+            bait_type = parts[1]
+            equip_bait(bait_type)
+            state = load_state()
+            continue
+        elif cmd.startswith("shop"):
+            parts = cmd.split()
+            if len(parts) < 2:
+                console.print("Usage: shop view / shop <item> <quantity>.")
+                continue
+            if parts[1] == "view":
+                show_shop()
+            elif parts[1] == "buy":
+                buy_item(parts[2], parts[3])
+            continue
         else:
             console.print("Unknown command. Try cast, sync, stats, quit.")
-
 
 @app.command()
 def cast():
@@ -49,12 +69,28 @@ def cast():
     except KeyboardInterrupt:
         console.print("You reel your line in.")
 
-
 @app.command()
 def sync():
     """sync your github activity"""
     console.print(Panel("syncing github activity", style="blue"))
 
+@app.command()
+def shop(action: str = typer.Argument("view"), item: str = None, quantity: int = 1):
+    """
+    The Gitfish shop. Usage:
+        gitfish shop
+        gitfish shop buy maggots 5
+        gitfish view
+    """
+    if action == "view":
+        show_shop()
+    elif action == "buy":
+        if not item:
+            console.print("Specify a valid item to purchase.")
+            return
+        buy_item(item, quantity)
+    else:
+        console.print("Unknown shop action.")
 
 if __name__ == "__main__":
     app()

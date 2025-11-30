@@ -1,3 +1,5 @@
+# Bait config described here. Can use to filter catches on bait types.
+
 BAIT_OPTIONS = {
     "maggots": {
         "name": "Maggots",
